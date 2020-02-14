@@ -1,0 +1,18 @@
+<android.content.Context: android.content.Context createPackageContext(java.lang.String,int)> -> _SOURCE_
+<android.content.Context: java.lang.ClassLoader getClassLoader()> -> _SOURCE_
+<java.lang.ClassLoader: java.lang.Class loadClass(java.lang.String)> -> _SOURCE_
+<java.lang.Class: java.lang.reflect.Method getDeclaredMethod(java.lang.String,java.lang.Class[])> -> _SOURCE_
+<java.lang.Class: java.lang.reflect.Method getMethod(java.lang.String,java.lang.Class[])> -> _SOURCE_
+<java.lang.Class: java.lang.reflect.Field getDeclaredField(java.lang.String)> -> _SOURCE_
+<java.lang.Class: java.lang.reflect.Field getField(java.lang.String)> -> _SOURCE_
+
+<android.content.Context: java.lang.ClassLoader getClassLoader()> -> _SINK_
+<java.lang.ClassLoader: java.lang.Class loadClass(java.lang.String)> -> _SINK_
+<java.lang.Class: java.lang.reflect.Method getDeclaredMethod(java.lang.String,java.lang.Class[])> -> _SINK_
+<java.lang.Class: java.lang.reflect.Method getMethod(java.lang.String,java.lang.Class[])> -> _SINK_
+<java.lang.Class: java.lang.reflect.Field getDeclaredField(java.lang.String)> -> _SINK_
+<java.lang.Class: java.lang.reflect.Field getField(java.lang.String)> -> _SINK_
+<java.lang.reflect.Field: void setAccessible(boolean)> -> _SINK_
+<java.lang.reflect.Method: void setAccessible(boolean)> -> _SINK_
+<java.lang.reflect.Method: java.lang.Object invoke(java.lang.Object,java.lang.Object[])> -> _SINK_
+
