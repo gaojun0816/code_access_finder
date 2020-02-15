@@ -19,6 +19,8 @@ import soot.Unit;
 import soot.Value;
 import soot.jimple.AssignStmt;
 import soot.jimple.FieldRef;
+import soot.jimple.IdentityStmt;
+import soot.jimple.ParameterRef;
 import soot.jimple.ReturnStmt;
 import soot.jimple.Stmt;
 import soot.jimple.toolkits.callgraph.CallGraph;
@@ -87,8 +89,10 @@ public class ComponentsBuilder {
       } else if (creator instanceof FieldRef) {
         fieldPropagate((FieldRef) creator, container.getDeclaringClass(), lc.getTheRefs());
       }
-      if (creator != null)
+      if (creator != null) {
+        passArgumentPropagate(creator, container, stmt, lc.getTheRefs(), null);
         returnValuePropagate(creator, container, lc.getTheRefs());
+      }
     } else if (LoadedClassLoader.isLoadingClassLoader(stmt)) {
       LoadedClassLoader cl = new LoadedClassLoader(stmt, container);
       curLoaders.add(cl);
@@ -98,8 +102,10 @@ public class ComponentsBuilder {
       } else if (loader instanceof FieldRef) {
         fieldPropagate((FieldRef) loader, container.getDeclaringClass(), cl.getTheRefs());
       }
-      if (loader != null)
+      if (loader != null) {
+        passArgumentPropagate(loader, container, stmt, cl.getTheRefs(), null);
         returnValuePropagate(loader, container, cl.getTheRefs());
+      }
     } else if (LoadedClass.isLoadingClass(stmt)) {
       LoadedClass c = new LoadedClass(stmt, container);
       curClasses.add(c);
@@ -109,8 +115,10 @@ public class ComponentsBuilder {
       } else if (cls instanceof FieldRef) {
         fieldPropagate((FieldRef) cls, container.getDeclaringClass(), c.getTheRefs());
       }
-      if (cls != null)
+      if (cls != null) {
+        passArgumentPropagate(cls, container, stmt, c.getTheRefs(), null);
         returnValuePropagate(cls, container, c.getTheRefs());
+      }
     } else if (LoadedMethod.isLoadingMethod(stmt)) {
       LoadedMethod lm = new LoadedMethod(stmt, container);
       curMethods.add(lm);
@@ -120,8 +128,10 @@ public class ComponentsBuilder {
       } else if (method instanceof FieldRef) {
         fieldPropagate((FieldRef) method, container.getDeclaringClass(), lm.getTheRefs());
       }
-      if (method != null)
+      if (method != null) {
+        passArgumentPropagate(method, container, stmt, lm.getTheRefs(), null);
         returnValuePropagate(method, container, lm.getTheRefs());
+      }
     } else if (LoadedField.isLoadingField(stmt)) {
       LoadedField lf = new LoadedField(stmt, container);
       curFields.add(lf);
@@ -131,8 +141,10 @@ public class ComponentsBuilder {
       } else if (field instanceof FieldRef) {
         fieldPropagate((FieldRef) field, container.getDeclaringClass(), lf.getTheRefs());
       }
-      if (field != null)
+      if (field != null) {
+        passArgumentPropagate(field, container, stmt, lf.getTheRefs(), null);
         returnValuePropagate(field, container, lf.getTheRefs());
+      }
     } else if (FieldOrMethodAccessibleSetting.isFieldOrMethodAccessibilitySetting(stmt)) {
       new FieldOrMethodAccessibleSetting(stmt, container);
     } else if (MethodInvocation.isMethodInvocation(stmt)) {
@@ -176,6 +188,7 @@ public class ComponentsBuilder {
             } else if (assignee instanceof FieldRef) {
               fieldPropagate((FieldRef) assignee, method.getDeclaringClass(), collector);
             } 
+            passArgumentPropagate(assignee, method, next, collector, null);
             returnValuePropagate(assignee, method, collector);
           }
         }
@@ -189,13 +202,86 @@ public class ComponentsBuilder {
     }
   }
   
+  /**
+   * Check if a Soot value is passed to any other methods as an argument of the method.
+   * 
+   * @param v the value to be checked.
+   * @param method the method where the value is found.
+   * @param start specify the analysis starts form which statement.
+   * @param collector the set to collect found aliasing local variables.
+   * @param checkedMethods is a set of Soot methods which has been checked. return value propagation should be checked no
+   *        more than once for each method to avoid dead loop caused by function self-calling (i.e., recursion) or calling
+   *        loops occupy multiple methods (e.g., A -> B -> ... -> A).
+   */
+  private void passArgumentPropagate(Value v, SootMethod method, Stmt start, Set<Value> collector, Set<SootMethod> checkedMethods) {
+    // store checked methods to avoid loop to dead.
+    if (checkedMethods == null) {
+      checkedMethods = new HashSet<>();
+      checkedMethods.add(method);
+    }
+    if (prepareActiveBody(method)) {
+      Body body = method.getActiveBody();
+      Iterator<Unit> it = body.getUnits().iterator((Unit) start);;
+      while (it.hasNext()) {
+        Stmt next = (Stmt) it.next();
+        if (next.containsInvokeExpr()) {
+          List<Value> args = next.getInvokeExpr().getArgs();
+          if (args.contains(v)) {
+            int i = args.indexOf(v);
+            SootMethod userMethod = next.getInvokeExpr().getMethod();
+            // skip checked methods.
+            if (checkedMethods.contains(userMethod)) continue;
+            IdentityStmt idstmt  = getParameter2LocalStmt(userMethod, i);
+            if (idstmt != null) {
+              Value l = idstmt.getLeftOp();
+              collector.add(l);
+              localPropagate(l, userMethod, idstmt, collector);
+              passArgumentPropagate(l, userMethod, idstmt, collector, checkedMethods);
+              returnValuePropagate(l, userMethod, collector);
+            }
+            checkedMethods.add(userMethod);
+          }
+        }
+      }
+    }
+  }
+  
+  /**
+   * Find the identity statement where certain parameter is passed to a local variable.
+   * 
+   * @param method
+   * @param parameterIndex
+   * @return
+   */
+  private IdentityStmt getParameter2LocalStmt(SootMethod method, int parameterIndex) {
+    IdentityStmt theIdStmt = null;
+    if (prepareActiveBody(method)) {
+      Body body = method.getActiveBody();
+      for (Unit u : body.getUnits()) {
+        Stmt stmt = (Stmt) u;
+        if (stmt instanceof IdentityStmt) {
+          IdentityStmt idStmt = (IdentityStmt) stmt;
+          Value assigner = idStmt.getRightOp();
+          if (assigner instanceof ParameterRef) {
+            ParameterRef pr = (ParameterRef) assigner;
+            if (pr.getIndex() == parameterIndex) {
+              theIdStmt = idStmt;
+              break;
+            }
+          }
+        }
+      }
+    }
+    return theIdStmt;
+  }
+
   private void returnValuePropagate(Value v, SootMethod callee, Set<Value> collector) {
     returnValuePropagate(v, callee, collector, null);
   }
   
   /**
    * Check if a Soot value had been returned. If yes, propagate the value within invoker methods. 
-   * Withiin the invoker, start from the invocation statement, find all the aliases
+   * Within the invoker, start from the invocation statement, find all the aliases
    * of the return value and collect them into the "refs" set.
    * 
    * @param v the value to check.
@@ -238,7 +324,7 @@ public class ComponentsBuilder {
                 } else if (assignee instanceof FieldRef) {
                   fieldPropagate((FieldRef) assignee, caller.getDeclaringClass(), collector);
                 }
-                checkedMethods.add(caller);
+                passArgumentPropagate(assignee, caller, stmt, collector, null);
                 returnValuePropagate(assignee, caller, collector, checkedMethods);
               }
             }
@@ -251,9 +337,10 @@ public class ComponentsBuilder {
         sb.append(": has no active body.");
         System.err.println(sb.toString());
       }
+      checkedMethods.add(caller);
     }
   }
-  
+   
   /**
    * Get all the possible return values of a method.
    * 
@@ -305,6 +392,7 @@ public class ComponentsBuilder {
                } else if (assignee instanceof FieldRef) {
                  fieldPropagate((FieldRef) assignee, m.getDeclaringClass(), collector);
                }
+               passArgumentPropagate(assignee, m, stmt, collector, null);
                returnValuePropagate(assignee, m, collector);
             } 
           }

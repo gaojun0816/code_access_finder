@@ -7,8 +7,6 @@ import soot.jimple.infoflow.android.InfoflowAndroidConfiguration;
 import soot.jimple.infoflow.android.SetupApplication;
 
 import lu.uni.snt.jungao.codetheftfinder.Global;
-import lu.uni.snt.jungao.codetheftfinder.components.ConstructorInvocation;
-import lu.uni.snt.jungao.codetheftfinder.components.LoadedComponent;
 
 /**
  * @author jun.gao
