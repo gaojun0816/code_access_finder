@@ -107,11 +107,14 @@ public class Printer {
   private static void traverseLoader(LoadedClassLoader loader, Line record) throws SizeTooSmallException {
     List<LoadedComponent> classes = loader.getSuccessorComponents();
     if (classes == null) {
+      record.upgradeStopLevel();
       records.add(record);
     } else {
       List<Line> replicas = record.multiReplicate(classes.size(), true);
       for (int i=0; i<classes.size(); i++) {
-        traverseClass((LoadedClass) classes.get(i), replicas.get(i));
+        Line l = replicas.get(i);
+        l.upgradeStopLevel();
+        traverseClass((LoadedClass) classes.get(i), l);
       }
     }
   }
@@ -125,18 +128,20 @@ public class Printer {
     record.setClsName(classNames.get(0));
     List<LoadedComponent> successors = cls.getSuccessorComponents();
     if (successors == null) {
+      record.upgradeStopLevel();
       records.add(record);
     } else {
       List<Line> replicas = record.multiReplicate(successors.size(), true);
       for (int i=0; i<successors.size(); i++) {
         LoadedComponent successor = successors.get(i);
+        Line l = replicas.get(i);
+        l.upgradeStopLevel();
         if (successor instanceof LoadedMethod) {
-          traverseMethod((LoadedMethod) successor, replicas.get(i));
+          traverseMethod((LoadedMethod) successor, l);
         } else if (successor instanceof LoadedField) {
-          traverseField((LoadedField) successor, replicas.get(i));
+          traverseField((LoadedField) successor, l);
         } else if (successor instanceof LoadedConstructor) {
-          
-          traverseConstructor((LoadedConstructor) successor, replicas.get(i));
+          traverseConstructor((LoadedConstructor) successor, l);
         } else {
           StringBuilder sb = new StringBuilder();
           sb.append("[Printer::traverseClass] ");
@@ -187,15 +192,18 @@ public class Printer {
     record.setType(Line.Type.METHOD);
     List<LoadedComponent> successors = method.getSuccessorComponents();
     if (successors == null) {
+      record.upgradeStopLevel();
       records.add(record);
     } else {
       List<Line> replicas = record.multiReplicate(successors.size(), true);
       for (int i=0; i<successors.size(); i++) {
         LoadedComponent successor = successors.get(i);
+        Line l = replicas.get(i);
+        l.upgradeStopLevel();
         if (successor instanceof MethodInvocation) {
-          treverseMethodInvocation((MethodInvocation) successor, replicas.get(i));
+          treverseMethodInvocation((MethodInvocation) successor, l);
         } else if (successor instanceof FieldOrMethodAccessibleSetting) {
-          treverseFieldOrMethodAccessibleSetting((FieldOrMethodAccessibleSetting) successor, replicas.get(i));
+          treverseFieldOrMethodAccessibleSetting((FieldOrMethodAccessibleSetting) successor, l);
         } else {
           StringBuilder sb = new StringBuilder();
           sb.append("[Printer::traverseMethod] ");
@@ -210,6 +218,7 @@ public class Printer {
     record.setIvokedOrSetOrNewed();
     record.setIsStatic(invocation.isStaticInvocation());
     record.setInvocationOrFieldSettingSite(invocation.getContainer().getSignature());
+    record.upgradeStopLevel();
     records.add(record);
   }
 
@@ -220,6 +229,7 @@ public class Printer {
     } else {
       record.setSetAccessible(accessibles.get(0));
     }
+    record.upgradeStopLevel();
     records.add(record);
   }
 
@@ -233,15 +243,18 @@ public class Printer {
     record.setType(Line.Type.FIELD);
     List<LoadedComponent> successors = field.getSuccessorComponents();
     if (successors == null) {
+      record.upgradeStopLevel();
       records.add(record);
     } else {
       List<Line> replicas = record.multiReplicate(successors.size(), true);
       for (int i=0; i<successors.size(); i++) {
         LoadedComponent successor = successors.get(i);
+        Line l = replicas.get(i);
+        l.upgradeStopLevel();
         if (successor instanceof FieldOrMethodAccessibleSetting) {
-          treverseFieldOrMethodAccessibleSetting((FieldOrMethodAccessibleSetting) successor, replicas.get(i));
+          treverseFieldOrMethodAccessibleSetting((FieldOrMethodAccessibleSetting) successor,l);
         } else if (successor instanceof FieldValueSetting) {
-          treverseFieldValueSetting((FieldValueSetting) successor, replicas.get(i));
+          treverseFieldValueSetting((FieldValueSetting) successor, l);
         } else {
           StringBuilder sb = new StringBuilder();
           sb.append("[Printer::traverseField] ");
@@ -256,6 +269,7 @@ public class Printer {
     record.setIvokedOrSetOrNewed();
     record.setIsStatic(setting.isStaticFieldSetting());
     record.setInvocationOrFieldSettingSite(setting.getContainer().getSignature());
+    record.upgradeStopLevel();
     records.add(record);
   }
 
@@ -292,11 +306,14 @@ public class Printer {
     record.setType(Line.Type.CONSTRUCTOR);
     List<LoadedComponent> invocations = constructor.getSuccessorComponents();
     if (invocations == null) {
+      record.upgradeStopLevel();
       records.add(record);
     } else {
       List<Line> replicas = record.multiReplicate(invocations.size(), true);
       for (int i=0; i<invocations.size(); i++) {
-        traverseConstructionInvocation(invocations.get(i), replicas.get(i));
+        Line l = replicas.get(i);
+        l.upgradeStopLevel();
+        traverseConstructionInvocation(invocations.get(i), l);
       }
     }
   }
@@ -304,6 +321,7 @@ public class Printer {
   private static void traverseConstructionInvocation(LoadedComponent invocation, Line record) {
     record.setIvokedOrSetOrNewed();
     record.setInvocationOrFieldSettingSite(invocation.getContainer().getSignature());
+    record.upgradeStopLevel();
     records.add(record);
   }
 

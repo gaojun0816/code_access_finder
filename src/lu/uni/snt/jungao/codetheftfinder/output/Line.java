@@ -15,6 +15,7 @@ import lu.uni.snt.jungao.codetheftfinder.output.exceptions.SizeTooSmallException
  */
 public class Line {
   private Type type;
+  private int stopLevel;
   private String pkgName, appName, clsName, methodOrConstructorSignatureOrFieldName, argsOrValue, setAccessible, creatorFlag,
                   creatorSite, invocationOrFieldSettingSite;
   private Boolean invokedOrSetOrNewed, isStatic;
@@ -24,12 +25,12 @@ public class Line {
    */
   public Line(String appName) {
     // TODO Auto-generated constructor stub
-    this(appName, null, null, null, null, Type.UNKNOWN, null, false, null, null, null);
+    this(appName, null, null, null, null, Type.UNKNOWN, null, false, null, null, null, 1);
   }
   
   public Line(String appName, String creatorFlag, String clsName, String methodOrConstructorSignatureOrFieldName,
       String argsOrValue, Type type, String setAccessible, Boolean invokedOrSetOrNewed, Boolean isStatic,
-      String creatorSite, String invocationOrFieldSettingSite) {
+      String creatorSite, String invocationOrFieldSettingSite, int stopLevel) {
     pkgName = ManifestInfo.getPkgName();
     this.appName = appName;
     this.creatorFlag = creatorFlag;
@@ -42,6 +43,7 @@ public class Line {
     this.isStatic = isStatic;
     this.creatorSite = creatorSite;
     this.invocationOrFieldSettingSite = invocationOrFieldSettingSite;
+    this.stopLevel = stopLevel;
   }
   
   public static enum Type {
@@ -79,7 +81,7 @@ public class Line {
    */
   public Line get1Copy(){
     return new Line(appName, creatorFlag, clsName, methodOrConstructorSignatureOrFieldName, 
-                    argsOrValue, type, setAccessible, invokedOrSetOrNewed, isStatic, creatorSite, invocationOrFieldSettingSite);
+                    argsOrValue, type, setAccessible, invokedOrSetOrNewed, isStatic, creatorSite, invocationOrFieldSettingSite, stopLevel);
   }
   
   public void setCreatorFlag(String creatorFlag) {
@@ -120,6 +122,12 @@ public class Line {
   
   public void setInvocationOrFieldSettingSite(String invocationOrFieldSettingSite) {
     this.invocationOrFieldSettingSite = invocationOrFieldSettingSite;
+  }
+  
+  public void upgradeStopLevel() {
+    // the level cannot be bigger than 5.
+    if (this.stopLevel < 5) 
+      this.stopLevel++;
   }
   
   @Override
@@ -189,8 +197,12 @@ public class Line {
     
     if (invocationOrFieldSettingSite != null)
       sb.append(invocationOrFieldSettingSite);
+    
+    sb.append(";");
+    sb.append(stopLevel);
+    
     sb.append("\n");
-      
+    
     return sb.toString();
   }
 

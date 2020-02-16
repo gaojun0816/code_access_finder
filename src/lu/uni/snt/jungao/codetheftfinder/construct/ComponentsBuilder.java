@@ -231,6 +231,7 @@ public class ComponentsBuilder {
             SootMethod userMethod = next.getInvokeExpr().getMethod();
             // skip checked methods.
             if (checkedMethods.contains(userMethod)) continue;
+            checkedMethods.add(userMethod);
             IdentityStmt idstmt  = getParameter2LocalStmt(userMethod, i);
             if (idstmt != null) {
               Value l = idstmt.getLeftOp();
@@ -239,7 +240,6 @@ public class ComponentsBuilder {
               passArgumentPropagate(l, userMethod, idstmt, collector, checkedMethods);
               returnValuePropagate(l, userMethod, collector);
             }
-            checkedMethods.add(userMethod);
           }
         }
       }
@@ -311,6 +311,7 @@ public class ComponentsBuilder {
       SootMethod caller = (SootMethod) it.next();
       // skip callee and checked callers.
       if (checkedMethods.contains(caller)) continue;
+      checkedMethods.add(caller);
       if (prepareActiveBody(caller)) {
         for (Unit u : caller.getActiveBody().getUnits()) {
           Stmt stmt = (Stmt) u;
@@ -337,7 +338,6 @@ public class ComponentsBuilder {
         sb.append(": has no active body.");
         System.err.println(sb.toString());
       }
-      checkedMethods.add(caller);
     }
   }
    

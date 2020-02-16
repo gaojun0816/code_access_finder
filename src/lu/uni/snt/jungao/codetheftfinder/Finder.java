@@ -23,8 +23,8 @@ public class Finder {
 //    Constructor constructor = Constructor.getInstance();
     System.out.println("Start job: " + Global.apk);
     Constructor.getInstance();
-    Printer.print();
-//    Printer.print2File(getOutputFilePath());
+//    Printer.print();
+    Printer.print2File(getOutputFilePath());
     System.out.println("Finder finished job!");
     System.out.println(String.join("", Collections.nCopies(100, "*")));
   }
