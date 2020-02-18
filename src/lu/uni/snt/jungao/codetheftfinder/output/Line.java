@@ -125,9 +125,16 @@ public class Line {
   }
   
   public void upgradeStopLevel() {
+    upgradeStopLevel(null);
+  }
+  
+  public void upgradeStopLevel(Integer level) {
     // the level cannot be bigger than 5.
-    if (this.stopLevel < 5) 
-      this.stopLevel++;
+    if (level == null) {
+      if (this.stopLevel < 5) this.stopLevel++;
+    } else {
+      this.stopLevel = level <= 5 ? level : 5;
+    }
   }
   
   @Override

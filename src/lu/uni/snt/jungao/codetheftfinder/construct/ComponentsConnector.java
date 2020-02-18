@@ -39,6 +39,7 @@ public class ComponentsConnector {
     connectLayer(LoadedClass.tracker, LoadedConstructor.tracker);
     connectLayer(LoadedClass.tracker, LoadedMethod.tracker);
     connectLayer(LoadedClass.tracker, LoadedField.tracker);
+    connectLayer(LoadedClass.tracker, ConstructorInvocation.tracker);
     connectLayer(LoadedMethod.tracker, FieldOrMethodAccessibleSetting.tracker);
     connectLayer(LoadedMethod.tracker, MethodInvocation.tracker);
     connectLayer(LoadedField.tracker, FieldOrMethodAccessibleSetting.tracker);

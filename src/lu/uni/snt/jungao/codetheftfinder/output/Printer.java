@@ -321,7 +321,7 @@ public class Printer {
   private static void traverseConstructionInvocation(LoadedComponent invocation, Line record) {
     record.setIvokedOrSetOrNewed();
     record.setInvocationOrFieldSettingSite(invocation.getContainer().getSignature());
-    record.upgradeStopLevel();
+    record.upgradeStopLevel(5);
     records.add(record);
   }
 

@@ -19,8 +19,8 @@ import lu.uni.snt.jungao.codetheftfinder.utils.StaticUtils;
 public class ConstructorInvocation extends LoadedComponent {
   public static List<LoadedComponent> tracker = new ArrayList<>();
   
-  private static final String CLASS = "java.lang.reflect.Constructor";
-  private static final String SIG = "java.lang.Object newInstance(java.lang.Object[])";
+  private static final String[] CLASS = {"java.lang.Class", "java.lang.reflect.Constructor"};
+  private static final String[] SIG = {"java.lang.Object newInstance()", "java.lang.Object newInstance(java.lang.Object[])"};
   
   private Value argsRef;
 
@@ -53,6 +53,11 @@ public class ConstructorInvocation extends LoadedComponent {
   }
   
   public static Boolean isConstructorInvocation(Stmt stmt) {
-    return StaticUtils.isIt(stmt, CLASS, SIG);
+    Boolean itis = false;
+    if (StaticUtils.isIt(stmt, CLASS[0], SIG[0]))
+        itis = true;
+    else if (StaticUtils.isIt(stmt, CLASS[1], SIG[1]))
+      itis = true;
+    return itis;
   }
 }
