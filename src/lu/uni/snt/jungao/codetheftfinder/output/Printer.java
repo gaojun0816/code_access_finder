@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import lu.uni.snt.jungao.codetheftfinder.components.ConstructorInvocation;
 import lu.uni.snt.jungao.codetheftfinder.components.FieldOrMethodAccessibleSetting;
 import lu.uni.snt.jungao.codetheftfinder.components.FieldValueSetting;
 import lu.uni.snt.jungao.codetheftfinder.components.LoadedClass;
@@ -142,6 +143,9 @@ public class Printer {
           traverseField((LoadedField) successor, l);
         } else if (successor instanceof LoadedConstructor) {
           traverseConstructor((LoadedConstructor) successor, l);
+        }else if (successor instanceof ConstructorInvocation) {
+          l.setType(Line.Type.CONSTRUCTOR);
+          traverseConstructionInvocation((ConstructorInvocation) successor, l);
         } else {
           StringBuilder sb = new StringBuilder();
           sb.append("[Printer::traverseClass] ");
