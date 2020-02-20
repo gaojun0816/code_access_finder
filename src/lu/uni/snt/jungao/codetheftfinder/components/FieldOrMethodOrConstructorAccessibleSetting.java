@@ -17,10 +17,10 @@ import lu.uni.snt.jungao.codetheftfinder.utils.StaticUtils;
  * @author jun.gao
  *
  */
-public class FieldOrMethodAccessibleSetting extends LoadedComponent {
+public class FieldOrMethodOrConstructorAccessibleSetting extends LoadedComponent {
   public static List<LoadedComponent> tracker = new ArrayList<>();
   
-  private static final String CLASS[] = {"java.lang.reflect.Field", "java.lang.reflect.Method"};
+  private static final String CLASS[] = {"java.lang.reflect.Field", "java.lang.reflect.Method", "java.lang.reflect.Constructor"};
   private static final String SIG = "void setAccessible(boolean)";
   
   private Value accessibilityRef;
@@ -29,7 +29,7 @@ public class FieldOrMethodAccessibleSetting extends LoadedComponent {
    * @param stmt
    * @param container
    */
-  public FieldOrMethodAccessibleSetting(Stmt stmt, SootMethod container) {
+  public FieldOrMethodOrConstructorAccessibleSetting(Stmt stmt, SootMethod container) {
     super(stmt, container);
     accessibilityRef = getInvokeExprArg(0);
     tracker.add(this);
@@ -75,7 +75,7 @@ public class FieldOrMethodAccessibleSetting extends LoadedComponent {
     return sb.toString();
   }
   
-  public static Boolean isFieldOrMethodAccessibilitySetting(Stmt stmt) {
+  public static Boolean isFieldOrMethodOrConstructorAccessibilitySetting(Stmt stmt) {
     Boolean itis = false;
     for (String cls : CLASS) {
       if (StaticUtils.isIt(stmt, cls, SIG)) {

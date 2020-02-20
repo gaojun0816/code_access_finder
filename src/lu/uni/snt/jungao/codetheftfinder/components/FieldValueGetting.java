@@ -8,7 +8,6 @@ import java.util.List;
 
 import soot.SootMethod;
 import soot.Value;
-import soot.jimple.Constant;
 import soot.jimple.NullConstant;
 import soot.jimple.Stmt;
 
@@ -18,42 +17,25 @@ import lu.uni.snt.jungao.codetheftfinder.utils.StaticUtils;
  * @author jun.gao
  *
  */
-public class FieldValueSetting extends LoadedComponent {
+public class FieldValueGetting extends LoadedComponent {
   public static List<LoadedComponent> tracker = new ArrayList<>();
   
   private static final String CLASS = "java.lang.reflect.Field";
-  private static final String[] SIG = {"void set(java.lang.Object,java.lang.Object)",
-      "void setBoolean(java.lang.Object,boolean)", "void setByte(java.lang.Object,byte)","void setChar(java.lang.Object,char)",
-      "void setDouble(java.lang.Object,double)","void setFloat(java.lang.Object,float)","void setInt(java.lang.Object,int)",
-      "void setLong(java.lang.Object,long)","void setShort(java.lang.Object,short)"};
+  private static final String[] SIG = {"java.lang.Object get(java.lang.Object)",
+      "boolean getBoolean(java.lang.Object)", "byte getByte(java.lang.Object)","char getChar(java.lang.Object)",
+      "double getDouble(java.lang.Object)","float getFloat(java.lang.Object)","int getInt(java.lang.Object)",
+      "long getLong(java.lang.Object)","short getShort(java.lang.Object)"};
   
-  private Value classRef, valueRef;
+  private Value classRef;
 
   /**
    * @param stmt
    * @param container
    */
-  public FieldValueSetting(Stmt stmt, SootMethod container) {
+  public FieldValueGetting(Stmt stmt, SootMethod container) {
     super(stmt, container);
     classRef = getInvokeExprArg(0);
-    valueRef = getInvokeExprArg(1);
     tracker.add(this);
-  }
-  
-  /**
-   * Find possible constant values set to the field.
-   * 
-   * @return return all possible constant values in a list. If not found, null will be returned.
-   */
-  public List<String> getConstantValue() {
-    List<String> value = null;
-    if (valueRef instanceof Constant) {
-      value = new ArrayList<>();
-      value.add(valueRef.toString());
-    } else {
-      // TODO use constant propagation for further check.
-    }
-    return value;
   }
   
   /**
@@ -70,14 +52,10 @@ public class FieldValueSetting extends LoadedComponent {
     return classRef;
   }
   
-  public Value getValueRef() {
-    return valueRef;
-  }
-  
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("----------------------- Field Value Setting -----------------------\n");
+    sb.append("----------------------- Field Value Getting -----------------------\n");
     sb.append(container.getDeclaringClass().getName());
     sb.append(" ");
     sb.append(container.getSubSignature());
@@ -85,15 +63,7 @@ public class FieldValueSetting extends LoadedComponent {
     sb.append("Statement: ");
     sb.append(stmt.toString());
     sb.append("\n\t");
-    sb.append("Set Value: ");
-    List<String> value = getConstantValue();
-    if (value != null) {
-      sb.append(value.toString());
-    } else {
-      sb.append("unknown");
-    }
-    sb.append("\n\t");
-    sb.append("Possible static field setting: ");
+    sb.append("Possible static field getting: ");
     if (isStaticFieldSetting()) {
       sb.append("Yes");
     } else {
@@ -103,7 +73,7 @@ public class FieldValueSetting extends LoadedComponent {
     return sb.toString();
   }
   
-  public static Boolean isFieldValueSetting(Stmt stmt) {
+  public static Boolean isFieldValueGetting(Stmt stmt) {
     Boolean itis = false;
     for (String sig : SIG) {
       if (StaticUtils.isIt(stmt, CLASS, sig))

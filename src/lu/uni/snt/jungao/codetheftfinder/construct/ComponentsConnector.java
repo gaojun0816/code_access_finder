@@ -10,7 +10,8 @@ import soot.Value;
 
 import lu.uni.snt.jungao.codetheftfinder.components.LoadedConstructor;
 import lu.uni.snt.jungao.codetheftfinder.components.ConstructorInvocation;
-import lu.uni.snt.jungao.codetheftfinder.components.FieldOrMethodAccessibleSetting;
+import lu.uni.snt.jungao.codetheftfinder.components.FieldOrMethodOrConstructorAccessibleSetting;
+import lu.uni.snt.jungao.codetheftfinder.components.FieldValueGetting;
 import lu.uni.snt.jungao.codetheftfinder.components.FieldValueSetting;
 import lu.uni.snt.jungao.codetheftfinder.components.LoadedClass;
 import lu.uni.snt.jungao.codetheftfinder.components.LoadedClassLoader;
@@ -40,10 +41,12 @@ public class ComponentsConnector {
     connectLayer(LoadedClass.tracker, LoadedMethod.tracker);
     connectLayer(LoadedClass.tracker, LoadedField.tracker);
     connectLayer(LoadedClass.tracker, ConstructorInvocation.tracker);
-    connectLayer(LoadedMethod.tracker, FieldOrMethodAccessibleSetting.tracker);
+    connectLayer(LoadedMethod.tracker, FieldOrMethodOrConstructorAccessibleSetting.tracker);
     connectLayer(LoadedMethod.tracker, MethodInvocation.tracker);
-    connectLayer(LoadedField.tracker, FieldOrMethodAccessibleSetting.tracker);
+    connectLayer(LoadedField.tracker, FieldOrMethodOrConstructorAccessibleSetting.tracker);
     connectLayer(LoadedField.tracker, FieldValueSetting.tracker);
+    connectLayer(LoadedField.tracker, FieldValueGetting.tracker);
+    connectLayer(LoadedConstructor.tracker, FieldOrMethodOrConstructorAccessibleSetting.tracker);
     connectLayer(LoadedConstructor.tracker, ConstructorInvocation.tracker);
   }
   

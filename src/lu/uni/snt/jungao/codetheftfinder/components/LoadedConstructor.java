@@ -22,7 +22,8 @@ public class LoadedConstructor extends LoadedComponent {
   public static List<LoadedComponent> tracker = new ArrayList<>();
   
   private static final String CLASS = "java.lang.Class";
-  private static final String SIG = "java.lang.reflect.Constructor getConstructor(java.lang.Class[])";
+  private static final String[] SIG = {"java.lang.reflect.Constructor getConstructor(java.lang.Class[])",
+      "java.lang.reflect.Constructor getDeclaredConstructor(java.lang.Class[])"};
 
   private Value argRef;
 
@@ -134,6 +135,11 @@ public class LoadedConstructor extends LoadedComponent {
   }
   
   public static Boolean isLoadingConstructor(Stmt stmt) {
-    return StaticUtils.isIt(stmt, CLASS, SIG);
+    Boolean itis = false;
+    if (StaticUtils.isIt(stmt, CLASS, SIG[0]))
+      itis = true;
+    else if (StaticUtils.isIt(stmt, CLASS, SIG[1]))
+      itis = true;
+    return itis;
   }
 }

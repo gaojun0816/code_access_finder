@@ -30,7 +30,8 @@ import soot.util.queue.QueueReader;
 
 import lu.uni.snt.jungao.codetheftfinder.components.LoadedConstructor;
 import lu.uni.snt.jungao.codetheftfinder.components.ConstructorInvocation;
-import lu.uni.snt.jungao.codetheftfinder.components.FieldOrMethodAccessibleSetting;
+import lu.uni.snt.jungao.codetheftfinder.components.FieldOrMethodOrConstructorAccessibleSetting;
+import lu.uni.snt.jungao.codetheftfinder.components.FieldValueGetting;
 import lu.uni.snt.jungao.codetheftfinder.components.FieldValueSetting;
 import lu.uni.snt.jungao.codetheftfinder.components.LoadedClass;
 import lu.uni.snt.jungao.codetheftfinder.components.LoadedClassLoader;
@@ -145,8 +146,8 @@ public class ComponentsBuilder {
         passArgumentPropagate(field, container, stmt, lf.getTheRefs(), null);
         returnValuePropagate(field, container, lf.getTheRefs());
       }
-    } else if (FieldOrMethodAccessibleSetting.isFieldOrMethodAccessibilitySetting(stmt)) {
-      new FieldOrMethodAccessibleSetting(stmt, container);
+    } else if (FieldOrMethodOrConstructorAccessibleSetting.isFieldOrMethodOrConstructorAccessibilitySetting(stmt)) {
+      new FieldOrMethodOrConstructorAccessibleSetting(stmt, container);
     } else if (MethodInvocation.isMethodInvocation(stmt)) {
       new MethodInvocation(stmt, container);
     } else if (ConstructorInvocation.isConstructorInvocation(stmt)) {
@@ -155,6 +156,8 @@ public class ComponentsBuilder {
       new LoadedConstructor(stmt, container);
     } else if (FieldValueSetting.isFieldValueSetting(stmt)) {
       new FieldValueSetting(stmt, container);
+    } else if (FieldValueGetting.isFieldValueGetting(stmt)) {
+      new FieldValueGetting(stmt, container);
     } else if (SootArray.isNewArrayStmt(stmt) || SootArrayElement.isSootArrayElementAssignment(stmt)) {
       SootArray.genSootArray(stmt, container);
     } 

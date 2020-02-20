@@ -11,7 +11,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import lu.uni.snt.jungao.codetheftfinder.components.ConstructorInvocation;
-import lu.uni.snt.jungao.codetheftfinder.components.FieldOrMethodAccessibleSetting;
+import lu.uni.snt.jungao.codetheftfinder.components.FieldOrMethodOrConstructorAccessibleSetting;
+import lu.uni.snt.jungao.codetheftfinder.components.FieldValueGetting;
 import lu.uni.snt.jungao.codetheftfinder.components.FieldValueSetting;
 import lu.uni.snt.jungao.codetheftfinder.components.LoadedClass;
 import lu.uni.snt.jungao.codetheftfinder.components.LoadedClassLoader;
@@ -206,8 +207,8 @@ public class Printer {
         l.upgradeStopLevel();
         if (successor instanceof MethodInvocation) {
           treverseMethodInvocation((MethodInvocation) successor, l);
-        } else if (successor instanceof FieldOrMethodAccessibleSetting) {
-          treverseFieldOrMethodAccessibleSetting((FieldOrMethodAccessibleSetting) successor, l);
+        } else if (successor instanceof FieldOrMethodOrConstructorAccessibleSetting) {
+          treverseFieldOrMethodOrConstructorAccessibleSetting((FieldOrMethodOrConstructorAccessibleSetting) successor, l);
         } else {
           StringBuilder sb = new StringBuilder();
           sb.append("[Printer::traverseMethod] ");
@@ -226,7 +227,7 @@ public class Printer {
     records.add(record);
   }
 
-  private static void treverseFieldOrMethodAccessibleSetting(FieldOrMethodAccessibleSetting setting, Line record) {
+  private static void treverseFieldOrMethodOrConstructorAccessibleSetting(FieldOrMethodOrConstructorAccessibleSetting setting, Line record) {
     List<String> accessibles = setting.getConstantAccessibility();
     if (accessibles == null) {
       record.setSetAccessible("Unknown");
@@ -255,10 +256,12 @@ public class Printer {
         LoadedComponent successor = successors.get(i);
         Line l = replicas.get(i);
         l.upgradeStopLevel();
-        if (successor instanceof FieldOrMethodAccessibleSetting) {
-          treverseFieldOrMethodAccessibleSetting((FieldOrMethodAccessibleSetting) successor,l);
+        if (successor instanceof FieldOrMethodOrConstructorAccessibleSetting) {
+          treverseFieldOrMethodOrConstructorAccessibleSetting((FieldOrMethodOrConstructorAccessibleSetting) successor,l);
         } else if (successor instanceof FieldValueSetting) {
           treverseFieldValueSetting((FieldValueSetting) successor, l);
+        } else if (successor instanceof FieldValueGetting) {
+          treverseFieldValueGetting((FieldValueGetting) successor, l);
         } else {
           StringBuilder sb = new StringBuilder();
           sb.append("[Printer::traverseField] ");
@@ -273,6 +276,14 @@ public class Printer {
     record.setIvokedOrSetOrNewed();
     record.setIsStatic(setting.isStaticFieldSetting());
     record.setInvocationOrFieldSettingSite(setting.getContainer().getSignature());
+    record.upgradeStopLevel();
+    records.add(record);
+  }
+  
+  private static void treverseFieldValueGetting(FieldValueGetting getting, Line record) {
+    record.setIvokedOrSetOrNewed();
+    record.setIsStatic(getting.isStaticFieldSetting());
+    record.setInvocationOrFieldSettingSite(getting.getContainer().getSignature());
     record.upgradeStopLevel();
     records.add(record);
   }
@@ -308,16 +319,20 @@ public class Printer {
     sig.append(")");
     record.setMethodOrConstructorSignatureOrFieldName(sig.toString());
     record.setType(Line.Type.CONSTRUCTOR);
-    List<LoadedComponent> invocations = constructor.getSuccessorComponents();
-    if (invocations == null) {
+    List<LoadedComponent> successors = constructor.getSuccessorComponents();
+    if (successors == null) {
       record.upgradeStopLevel();
       records.add(record);
     } else {
-      List<Line> replicas = record.multiReplicate(invocations.size(), true);
-      for (int i=0; i<invocations.size(); i++) {
+      List<Line> replicas = record.multiReplicate(successors.size(), true);
+      for (int i=0; i<successors.size(); i++) {
+        LoadedComponent successor = successors.get(i);
         Line l = replicas.get(i);
         l.upgradeStopLevel();
-        traverseConstructionInvocation(invocations.get(i), l);
+        if (successor instanceof ConstructorInvocation) 
+          traverseConstructionInvocation(successor, l);
+        else if (successor instanceof FieldOrMethodOrConstructorAccessibleSetting) 
+          treverseFieldOrMethodOrConstructorAccessibleSetting((FieldOrMethodOrConstructorAccessibleSetting) successor, l);
       }
     }
   }
